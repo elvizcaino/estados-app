@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:estados/bloc/usuario/usuario_cubit.dart';
+import 'package:estados/models/usuario_model.dart';
 
 class Pagina1Page extends StatelessWidget {
 
@@ -8,8 +11,14 @@ class Pagina1Page extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Pagina 1"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.exit_to_app),
+            onPressed: () => context.bloc<UsuarioCubit>().borrarUsuario()
+          )
+        ],
       ),
-      body: InformacionUsuario(),
+      body: BodyScaffold(),
      floatingActionButton: FloatingActionButton(
        child: Icon(Icons.forward),
        onPressed: () => Navigator.pushNamed(context, "pagina2"),
@@ -18,7 +27,28 @@ class Pagina1Page extends StatelessWidget {
   }
 }
 
+class BodyScaffold extends StatelessWidget {
+  
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<UsuarioCubit, UsuarioState>(
+      builder: (_, state) {
+        switch (state.runtimeType) {
+          case UsuarioInitial:
+            return Center(child: Text("No hay usuario"));
+          case UsuarioActivo:
+            return InformacionUsuario((state as UsuarioActivo).usuario);
+          default:
+            return Center(child: Text("Estado no conocido"));
+        }
+      });
+  }
+}
+
 class InformacionUsuario extends StatelessWidget {
+  final UsuarioModel _usuario;
+
+  const InformacionUsuario(this._usuario);
 
   @override
   Widget build(BuildContext context) {
@@ -31,13 +61,11 @@ class InformacionUsuario extends StatelessWidget {
         children: [
           Text("General", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Divider(),
-          ListTile(title: Text("Nombre: ")),
-          ListTile(title: Text("Edad: ")),
+          ListTile(title: Text("Nombre: ${this._usuario.nombre}")),
+          ListTile(title: Text("Edad: ${this._usuario.edad}")),
           Text("Prefesiones", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Divider(),
-          ListTile(title: Text("Prefesión 1: ")),
-          ListTile(title: Text("Prefesión 2: ")),
-          ListTile(title: Text("Prefesión 3: ")),
+          ...this._usuario.prefesiones.map((p) => ListTile(title: Text(p))).toList()
         ],
       ),
     );
